@@ -19,9 +19,11 @@ final class Dog {
     var hop: CGFloat = 0
     var spawnAcc: CGFloat = 0
     var parts: [Particle] = []
-    let margin: CGFloat = 80
+    private var walkAfterWake = false
     let groundY: CGFloat = 4
-    let scale: CGFloat = 1.15
+    var scale: CGFloat { appearance.size.scale }
+    /// Keeps the (wider) dog fully on screen at the screen edges.
+    var margin: CGFloat { 70 * scale }
 
     func set(_ m: Mood, _ d: CGFloat) { mood = m; mt = 0; dur = d; spawnAcc = 0 }
 
@@ -31,13 +33,30 @@ final class Dog {
         set(run ? .run : .walk, 0)
     }
 
-    func pickNext(w: CGFloat) {
+    /// Walk to a random spot at least a short stroll away.
+    func wander(w: CGFloat) {
         let lo = margin, hi = max(margin + 1, w - margin)
+        var tx = CGFloat.random(in: lo...hi)
+        if abs(tx - x) < 160 { tx = x < w / 2 ? min(hi, x + 280) : max(lo, x - 280) }
+        go(tx, run: false)
+    }
+
+    /// Whether a point (in overlay-window coordinates) is on or near the dog.
+    func contains(_ p: CGPoint) -> Bool {
+        abs(p.x - x) <= 80 * scale && p.y >= 0 && p.y <= 120 * scale
+    }
+
+    /// A poke: a sleeping dog stretches awake, then heads off for a walk.
+    func poke() {
+        guard mood == .sleep else { return }
+        set(.wake, 0.8)
+        walkAfterWake = true
+    }
+
+    func pickNext(w: CGFloat) {
         switch Int.random(in: 0..<100) {
         case 0..<40:
-            var tx = CGFloat.random(in: lo...hi)
-            if abs(tx - x) < 160 { tx = x < w / 2 ? min(hi, x + 280) : max(lo, x - 280) }
-            go(tx, run: false)
+            wander(w: w)
         case 40..<60:
             if Bool.random() { dir = -dir }
             set(.sit, .random(in: 3...6))
@@ -80,7 +99,9 @@ final class Dog {
             if spawnAcc > 1.4 { spawnAcc = 0; spawn(.zzz, dx: 52, dy: 62, vx: 10 * dir, vy: 22, life: 2.4) }
             if mt > dur { set(.wake, 0.8) }
         case .wake:
-            if mt > dur { pickNext(w: w) }
+            if mt > dur {
+                if walkAfterWake { walkAfterWake = false; wander(w: w) } else { pickNext(w: w) }
+            }
         case .happy:
             hop = abs(sin(mt * 9)) * 26
             spawnAcc += dt

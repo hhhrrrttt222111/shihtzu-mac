@@ -7,7 +7,7 @@ enum Snapshot {
         let label: String?
     }
 
-    private static let cellWidth = 230, cellHeight = 200
+    private static let cellWidth = 230, cellHeight = 240
 
     /// Every mood, wearing `appearance`.
     static func moods(to path: String, appearance: Appearance) {
@@ -24,19 +24,30 @@ enum Snapshot {
     /// Every coat, groom and accessory, each varied against the current appearance.
     static func gallery(to path: String, base: Appearance) {
         var cells: [Cell] = []
-        for coat in Coat.all {
+        for coat in base.breed.coats {
             var a = base; a.coat = coat
             cells.append(Cell(dog: pose(.walk, a), label: coat.key))
         }
-        for groom in Groom.all {
+        for groom in base.breed.grooms {
             var a = base; a.groom = groom
             cells.append(Cell(dog: pose(.walk, a), label: groom.key))
         }
-        for accessory in Accessory.all {
+        for accessory in Accessory.allCases {
             var a = base; a.accessory = accessory
             cells.append(Cell(dog: pose(.walk, a), label: accessory.key))
         }
         render(cells, columns: 6, to: path)
+    }
+
+    /// Every breed in its default coat and groom (keeping the current accessory and size).
+    static func breeds(to path: String, base: Appearance) {
+        let cells = Breed.all.map { breed -> Cell in
+            var a = Appearance(breed: breed)
+            a.accessory = base.accessory
+            a.size = base.size
+            return Cell(dog: pose(.walk, a), label: breed.key)
+        }
+        render(cells, columns: 5, to: path)
     }
 
     private static func pose(_ mood: Dog.Mood, _ appearance: Appearance) -> Dog {

@@ -18,17 +18,17 @@ fi
 
 echo "Building overlay..."
 swiftc -O -o "$DEST/bin/terminal-animals-overlay" \
-  "$ROOT"/overlay/*.swift -framework AppKit
+  "$ROOT"/overlay/*.swift "$ROOT"/overlay/Breeds/*.swift -framework AppKit
 
 cp "$ROOT/terminal-animals.plugin.zsh" "$DEST/"
 
 ZSHRC="${HOME}/.zshrc"
 LINE='source "$HOME/.terminal-animals/terminal-animals.plugin.zsh"'
 if ! grep -Fqx "$LINE" "$ZSHRC" 2>/dev/null; then
-  printf '\n# Terminal Animals\n%s\n' "$LINE" >> "$ZSHRC"
+  printf '\n# Shihtzu\n%s\n' "$LINE" >> "$ZSHRC"
 fi
 
-echo "🐾 Terminal Animals installed."
+echo "🐾 Shihtzu installed."
 echo "Open a new terminal (or: source ~/.zshrc) and the dog will appear on your screen."
 echo "Commands: shihtzu on | off | start | quit    shihtzu-chance 50"
-echo "Pick a look: shihtzu list | random | reset | coat <name> | groom <name> | accessory <name>"
+echo "Pick a look: shihtzu list | random | reset | bigger | smaller | breed <name> | coat <name> | groom <name> | accessory <name>"

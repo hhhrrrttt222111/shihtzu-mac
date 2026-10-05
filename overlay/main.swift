@@ -1,4 +1,4 @@
-// Terminal Animals overlay — a shih tzu that lives along the bottom edge of the screen.
+// Shihtzu overlay — a shih tzu that lives along the bottom edge of the screen.
 // A transparent, click-through window; the zsh plugin talks to it through an events file.
 import AppKit
 

@@ -17,12 +17,15 @@ final class App: NSObject, NSApplicationDelegate {
     var window: NSWindow!
     var view: DogView!
     var timer: Timer?
+    var clickMonitor: Any?
     var statusItem: NSStatusItem!
     var hideItem: NSMenuItem!
     var lastTick = CACurrentMediaTime()
     var frame = 0
     var offset: UInt64 = 0
     var hidden = false
+    /// Tall enough for the largest size with a crown or mane, plus floating hearts.
+    let windowHeight: CGFloat = 240
 
     func applicationDidFinishLaunching(_ n: Notification) {
         window = NSWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
@@ -50,7 +53,7 @@ final class App: NSObject, NSApplicationDelegate {
         hideItem = NSMenuItem(title: "Hide dog", action: #selector(toggleHidden), keyEquivalent: "")
         hideItem.target = self
         menu.addItem(hideItem)
-        let quit = NSMenuItem(title: "Quit Terminal Animals", action: #selector(quitApp), keyEquivalent: "q")
+        let quit = NSMenuItem(title: "Quit Shihtzu", action: #selector(quitApp), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
         statusItem.menu = menu
@@ -59,13 +62,24 @@ final class App: NSObject, NSApplicationDelegate {
 
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30, repeats: true) { [weak self] _ in self?.tick() }
         RunLoop.main.add(timer!, forMode: .common)
+
+        // The window is click-through, so watch clicks globally (observed, never consumed).
+        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { [weak self] _ in
+            self?.handleClick(at: NSEvent.mouseLocation)
+        }
     }
 
     @objc func layoutWindow() {
         guard let s = NSScreen.screens.first else { return }
         let vf = s.visibleFrame
-        window.setFrame(NSRect(x: vf.minX, y: vf.minY, width: vf.width, height: 190), display: true)
+        window.setFrame(NSRect(x: vf.minX, y: vf.minY, width: vf.width, height: windowHeight), display: true)
         view.frame = NSRect(origin: .zero, size: window.frame.size)
+    }
+
+    func handleClick(at screenPoint: NSPoint) {
+        guard !hidden else { return }
+        let local = CGPoint(x: screenPoint.x - window.frame.minX, y: screenPoint.y - window.frame.minY)
+        if view.dog.contains(local) { view.dog.poke() }
     }
 
     @objc func toggleHidden() { setHidden(!hidden) }
