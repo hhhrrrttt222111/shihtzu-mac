@@ -6,12 +6,42 @@ A terminal can only draw inside its own window, so the dog is a small native mac
 
 ## Install
 
+### First time setup
+
+**Requirements:** macOS and Xcode Command Line Tools.
+
+Check if you have the compiler:
 ```zsh
-./install.sh        # compiles the overlay with swiftc (needs Xcode Command Line Tools)
-source ~/.zshrc
+xcode-select --install    # if needed
 ```
 
-The dog starts the first time a shell opens. A 🐾 menu-bar item lets you hide it or quit.
+Clone and install:
+```zsh
+git clone https://github.com/yourusername/shihtzu-mac.git
+cd shihtzu-mac
+./install.sh              # compiles the overlay and installs the zsh plugin
+source ~/.zshrc           # or open a new terminal tab
+```
+
+The dog starts when the first shell opens. A 🐾 menu-bar item lets you hide it or quit.
+
+### Update
+
+If changes are pushed to the repo, pull them and reinstall:
+
+```zsh
+cd /path/to/shihtzu-mac
+git pull
+./install.sh              # recompiles and replaces the overlay
+```
+
+The installer stops any running overlay so the new build takes over immediately. No manual restart needed.
+
+You can also reinstall from any branch:
+```zsh
+git checkout some-branch
+./install.sh
+```
 
 ## What it does
 
@@ -60,7 +90,24 @@ Changes apply to the running dog immediately and are saved to `~/.terminal-anima
 | `border-collie` | Border Collie | 4 | 2 |
 | `dalmatian` | Dalmatian | 2 | 1 |
 
-Run `shihtzu coat` or `shihtzu groom` to see the choices for the breed you're currently using.
+### Explore all configurations
+
+Each breed has its own coats and grooms. Run these commands to see what's available:
+
+```zsh
+shihtzu coat                  # list coats for the current breed
+shihtzu groom                 # list grooms for the current breed
+shihtzu breed poodle          # switch to a breed
+shihtzu coat                  # now shows poodle coats
+```
+
+You can also preview all configurations at once:
+
+```zsh
+terminal-animals-overlay --gallery out.png                     # current breed's options
+terminal-animals-overlay --gallery out.png --breed poodle      # poodle's options
+terminal-animals-overlay --breeds out.png                      # all 14 breeds
+```
 
 ### Shih tzu coats
 
@@ -89,13 +136,87 @@ Run `shihtzu coat` or `shihtzu groom` to see the choices for the breed you're cu
 | `lion` | Lion cut with a mane |
 | `ponytails` | Two small ponytails |
 
+### Poodle coats
+
+| Name | Look |
+| --- | --- |
+| `white` | White |
+| `black` | Black |
+| `apricot` | Apricot |
+| `cream` | Cream |
+| `red` | Red |
+| `silver` | Silver |
+| `chocolate` | Chocolate |
+| `parti` | Black & White Parti |
+
+### Poodle grooms
+
+| Name | Look |
+| --- | --- |
+| `puppy` | Fluffy puppy cut |
+| `pompom` | Top-puff |
+| `teddy` | Teddy-bear cut |
+| `show` | Show cut with mane |
+
+### Bernedoodle coats
+
+| Name | Look |
+| --- | --- |
+| `tricolor` | Tricolor (black, tan, white) |
+| `chocolate-tricolor` | Chocolate tricolor |
+| `parti` | Black & white parti |
+| `sable` | Sable |
+| `merle` | Merle |
+
+### Bernedoodle grooms
+
+| Name | Look |
+| --- | --- |
+| `natural` | Fluffy natural |
+| `teddy` | Teddy-bear cut |
+| `puppy` | Short puppy cut |
+| `shaggy` | Long shaggy coat |
+
+### Golden Retriever coats
+
+| Name | Look |
+| --- | --- |
+| `golden` | Golden |
+| `light-golden` | Light golden |
+| `dark-golden` | Dark golden |
+
+### Golden Retriever grooms
+
+| Name | Look |
+| --- | --- |
+| `natural` | Natural feathered coat |
+| `trimmed` | Summer trim |
+| `puppy` | Fluffy puppy |
+
 ### Sizes (all breeds)
 
 `xsmall`, `small`, `medium` (default), `large`, `xlarge` — 0.85x to 1.45x. The range is capped on purpose: the dog stays readable at the small end and always fits the overlay at the large end. `shihtzu bigger` / `smaller` move one step and stop at the limits. `shihtzu random` leaves the size alone.
 
+### Other breeds
+
+The remaining breeds also have their own coats and grooms:
+
+- **Labrador Retriever** — 5 coats (yellow, black, chocolate, fox red, silver), 3 grooms
+- **German Shepherd** — 4 coats (black & tan, sable, black, white), 3 grooms
+- **Siberian Husky** — 4 coats (grey & white, black & white, red & white, white), 3 grooms
+- **Corgi** — 4 coats (red & white, fawn, sable, tricolor), 2 grooms
+- **Dachshund** — 5 coats (red, black & tan, chocolate & tan, cream, dapple), 2 grooms
+- **Beagle** — 3 coats (tricolor, lemon & white, red & white), 2 grooms
+- **Pug** — 4 coats (fawn, black, apricot, silver), 1 groom
+- **Pomeranian** — 6 coats (orange, cream, black, white, sable, orange & white), 3 grooms
+- **Border Collie** — 4 coats (black & white, red & white, tricolor, blue merle), 2 grooms
+- **Dalmatian** — 2 coats (black spots, liver spots), 1 groom
+
+Use `shihtzu breed <name>` to switch to any breed, then `shihtzu coat` and `shihtzu groom` to explore its options.
+
 ### Accessories (all breeds)
 
-`none` (default), `flowers` (hair clips), `cap`, `scarf`, `glasses`, `crown`.
+`none` (default), `flowers` (hair clips), `cap`, `scarf`, `glasses`, `crown`. These work on every breed.
 
 ## Other commands
 
