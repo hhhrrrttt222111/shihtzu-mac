@@ -27,7 +27,7 @@ The dog starts when the first shell opens. A 🐾 menu-bar item lets you hide it
 
 ### Update
 
-If changes are pushed to the repo, pull them and reinstall:
+If changes are pushed to the repo, pull them and reins₹tall:
 
 ```zsh
 cd /path/to/shihtzu-mac
@@ -217,6 +217,16 @@ Use `shihtzu breed <name>` to switch to any breed, then `shihtzu coat` and `shih
 ### Accessories (all breeds)
 
 `none` (default), `flowers` (hair clips), `cap`, `scarf`, `glasses`, `crown`. These work on every breed.
+
+## Make the dog do things
+
+```zsh
+shihtzu jump         # make the dog jump
+shihtzu cry          # make the dog cry (sad with tears)
+shihtzu eat          # make the dog eat
+shihtzu poop         # make the dog poop
+shihtzu pee          # make the dog pee
+```
 
 ## Other commands
 

@@ -126,6 +126,16 @@ final class App: NSObject, NSApplicationDelegate {
         let parts = line.split(separator: " ")
         switch parts.first {
         case "cmd": if !hidden { view.dog.react(ok: parts.count < 2 || parts[1] == "0") }
+        case "action":
+            guard !hidden, parts.count > 1 else { return }
+            switch String(parts[1]) {
+            case "jump": view.dog.set(.jump, 0.8)
+            case "cry": view.dog.set(.cry, 3.0)
+            case "eat": view.dog.set(.eat, 3.0)
+            case "poop": view.dog.set(.poop, 2.8)
+            case "pee": view.dog.set(.pee, 2.4)
+            default: break
+            }
         case "reload":
             view.dog.appearance = .load()
             view.needsDisplay = true

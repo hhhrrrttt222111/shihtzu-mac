@@ -30,7 +30,11 @@ _ta_send() {
   print -r -- "$1" >> "$_TA_EVENTS"
 }
 
-_ta_preexec() { _TA_LAST_CMD="$1" }
+# The dog's own commands (shihtzu, shihtzu-chance) are not "work": reacting to them would
+# immediately cancel the action they just asked for.
+_ta_preexec() {
+  [[ "${1%% *}" == shihtzu* ]] && _TA_LAST_CMD="" || _TA_LAST_CMD="$1"
+}
 
 _ta_precmd() {
   local rc=$?
@@ -153,6 +157,12 @@ _ta_reset() {
   echo "🐾 back to the default shih tzu"
 }
 
+# Send an action command (jump, cry, eat, poop, pee).
+_ta_action() {
+  local action="$1"
+  _ta_start; _ta_send "action $action"
+}
+
 shihtzu() {
   case "${1:-}" in
     on)    TERMINAL_ANIMALS_ENABLED=1; _ta_start; _ta_send show; echo "🐾 Shihtzu: on" ;;
@@ -164,11 +174,12 @@ shihtzu() {
     smaller) _ta_resize -1 ;;
     random) _ta_randomize "${2:-}" ;;
     reset)  _ta_reset ;;
+    jump|cry|eat|poop|pee) _ta_action "$1" ;;
     list)
       [[ -x "$_TA_BIN" ]] || { echo "overlay not installed — run install.sh"; return 1; }
       local kind
       for kind in $_ta_kinds; do echo "${kind}s (* = current):"; _ta_show_choices "$kind"; done ;;
-    *)     echo "usage: shihtzu {on|off|start|quit|list|random [all]|reset|bigger|smaller|breed|coat|groom|accessory|size [name]}" ;;
+    *)     echo "usage: shihtzu {on|off|start|quit|list|random [all]|reset|bigger|smaller|jump|cry|eat|poop|pee|breed|coat|groom|accessory|size [name]}" ;;
   esac
 }
 

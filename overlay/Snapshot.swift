@@ -7,15 +7,23 @@ enum Snapshot {
         let label: String?
     }
 
-    private static let cellWidth = 230, cellHeight = 240
+    private static let cellWidth = 260, cellHeight = 240
 
     /// Every mood, wearing `appearance`.
     static func moods(to path: String, appearance: Appearance) {
-        let moods: [Dog.Mood] = [.walk, .run, .sit, .sniff, .sleep, .happy, .sad, .wake]
+        let moods: [Dog.Mood] = [.walk, .run, .sit, .sniff, .sleep, .happy, .sad, .wake, .jump, .cry, .eat, .poop, .pee]
         let cells = moods.map { mood -> Cell in
             let d = pose(mood, appearance)
             if mood == .sleep { d.spawn(.zzz, dx: 52, dy: 62, vx: 0, vy: 0, life: 1.5) }
             if mood == .happy { d.hop = 14; d.spawn(.heart, dx: 30, dy: 100, vx: 0, vy: 0, life: 1) }
+            if mood == .jump { d.hop = 34 }
+            if mood == .cry { for eyeX: CGFloat in [29, 55] { d.spawn(.drop, dx: eyeX + d.bodyOffset, dy: 70, vx: 0, vy: 0, life: 0.7) } }
+            if mood == .eat { d.spawn(.crumb, dx: 90 + d.bodyOffset, dy: 22, vx: 0, vy: 0, life: 0.5) }
+            if mood == .poop { d.spawn(.poop, dx: -d.rearReach, dy: 0, vx: 0, vy: 0, life: 6) }
+            if mood == .pee {
+                d.spawn(.puddle, dx: -(d.rearReach + 6), dy: 0, vx: 0, vy: 0, life: 7)
+                d.parts[0].life = 5   // already spread out
+            }
             return Cell(dog: d, label: nil)
         }
         render(cells, columns: moods.count, to: path)

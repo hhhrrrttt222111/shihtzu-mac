@@ -5,8 +5,8 @@ extension Dog {
         let coat = appearance.coat, groom = appearance.groom, anatomy = appearance.breed.anatomy
         let accessory = appearance.accessory
         let asleep = mood == .sleep
-        let happy = mood == .happy
-        let sad = mood == .sad
+        let happy = mood == .happy || mood == .jump
+        let sad = mood == .sad || mood == .cry
         let sniff = mood == .sniff
         let run = mood == .run
         let yawn = mood == .wake
@@ -60,7 +60,7 @@ extension Dog {
         c.restoreGState()
 
         // Eyes
-        let closedArch = happy || yawn
+        let closedArch = happy || yawn || mood == .eat || mood == .poop || mood == .pee
         let closedSleep = asleep
         let blink = blinkLeft > 0
         for ex in [CGFloat(-13), CGFloat(13)] {

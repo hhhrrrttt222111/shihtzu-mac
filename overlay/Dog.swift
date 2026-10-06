@@ -2,7 +2,7 @@ import CoreGraphics
 
 /// The dog's state and behaviour. Rendering lives in `DogDrawing.swift`.
 final class Dog {
-    enum Mood { case walk, run, sit, sniff, sleep, happy, sad, wake }
+    enum Mood { case walk, run, sit, sniff, sleep, happy, sad, wake, jump, cry, eat, poop, pee }
 
     var appearance = Appearance()
 
@@ -20,12 +20,18 @@ final class Dog {
     var spawnAcc: CGFloat = 0
     var parts: [Particle] = []
     private var walkAfterWake = false
+    /// Set once an action has left its mark on the ground (poop, puddle), so it happens only once.
+    private var actionDone = false
     let groundY: CGFloat = 4
     var scale: CGFloat { appearance.size.scale }
     /// Keeps the (wider) dog fully on screen at the screen edges.
     var margin: CGFloat { 70 * scale }
+    /// How far this breed's body is longer (+) or shorter (-) than the classic 98pt shih tzu, per end.
+    var bodyOffset: CGFloat { appearance.breed.anatomy.body.width / 2 - 49 }
+    /// Distance behind the dog's centre where its rear end is.
+    var rearReach: CGFloat { appearance.breed.anatomy.body.width / 2 + 18 }
 
-    func set(_ m: Mood, _ d: CGFloat) { mood = m; mt = 0; dur = d; spawnAcc = 0 }
+    func set(_ m: Mood, _ d: CGFloat) { mood = m; mt = 0; dur = d; spawnAcc = 0; actionDone = false }
 
     func go(_ tx: CGFloat, run: Bool) {
         target = tx
@@ -68,12 +74,16 @@ final class Dog {
         }
     }
 
+    /// Actions the user asked for by name; a command result must not cut them short.
+    var isPerformingAction: Bool { [.jump, .cry, .eat, .poop, .pee].contains(mood) }
+
     func react(ok: Bool) {
+        guard !isPerformingAction else { return }
         set(ok ? .happy : .sad, ok ? 1.4 : 2.4)
     }
 
     func spawn(_ k: Particle.Kind, dx: CGFloat, dy: CGFloat, vx: CGFloat, vy: CGFloat, life: CGFloat) {
-        parts.append(Particle(kind: k, x: x + dir * dx, y: groundY + dy, vx: vx, vy: vy, life: life, maxLife: life))
+        parts.append(Particle(kind: k, x: x + dir * dx * scale, y: groundY + dy * scale, vx: vx, vy: vy, life: life, maxLife: life))
     }
 
     func update(_ dt: CGFloat, w: CGFloat) {
@@ -118,6 +128,39 @@ final class Dog {
             spawnAcc += dt
             if spawnAcc > 0.7 { spawnAcc = 0; spawn(.drop, dx: 52, dy: 80, vx: 6 * dir, vy: -25, life: 0.9) }
             if mt > dur { set(.sit, 2.5) }
+        case .jump:
+            // One big leap: up and back down over the action's duration.
+            hop = sin(min(mt / dur, 1) * .pi) * 48
+            if mt > dur { pickNext(w: w) }
+        case .cry:
+            spawnAcc += dt
+            hop = abs(sin(mt * 14)) * 1.5   // sobbing
+            if spawnAcc > 0.16 {
+                spawnAcc = 0
+                for eyeX: CGFloat in [29, 55] {
+                    spawn(.drop, dx: eyeX + bodyOffset + .random(in: -2...2), dy: 76, vx: .random(in: -6...6), vy: -12, life: 0.7)
+                }
+            }
+            if mt > dur { set(.sit, 2.0) }
+        case .eat:
+            spawnAcc += dt
+            if spawnAcc > 0.22 {
+                spawnAcc = 0
+                spawn(.crumb, dx: 90 + bodyOffset, dy: 16, vx: .random(in: -14...14), vy: .random(in: 20...38), life: 0.5)
+            }
+            if mt > dur { pickNext(w: w) }
+        case .poop:
+            if !actionDone && mt > dur * 0.55 {
+                actionDone = true
+                spawn(.poop, dx: -rearReach, dy: 0, vx: 0, vy: 0, life: 6)
+            }
+            if mt > dur { pickNext(w: w) }
+        case .pee:
+            if !actionDone && mt > 0.4 {
+                actionDone = true
+                spawn(.puddle, dx: -(rearReach + 6), dy: 0, vx: 0, vy: 0, life: 7)
+            }
+            if mt > dur { pickNext(w: w) }
         }
 
         for i in parts.indices {

@@ -8,15 +8,15 @@ private let spotPattern: [(x: CGFloat, y: CGFloat, r: CGFloat)] = [
 extension Dog {
     func draw(_ c: CGContext) {
         let coat = appearance.coat, groom = appearance.groom, anatomy = appearance.breed.anatomy
-        let sitting = mood == .sit || mood == .sad
+        let sitting = mood == .sit || mood == .sad || mood == .cry
         let asleep = mood == .sleep
         let moving = mood == .walk || mood == .run
-        let excited = mood == .run || mood == .happy
+        let excited = mood == .run || mood == .happy || mood == .jump
 
         // Proportions relative to the classic 98x48 body on 23pt legs (the shih tzu).
         let bodyW = anatomy.body.width + (asleep ? 6 : 0)
         let stretch = bodyW / 98
-        let off = anatomy.body.width / 2 - 49             // how far head and tail sit from the classic ends
+        let off = bodyOffset                               // how far head and tail sit from the classic ends
         let legH = anatomy.leg.height, legW = anatomy.leg.width
         let stance = (legH - 23) + (anatomy.body.height - 48) / 2   // body rides higher on long legs
         let lift = asleep ? 0 : (sitting ? stance / 2 : stance)
@@ -37,7 +37,21 @@ extension Dog {
         var head = CGPoint(x: 44 + off, y: 68 + lift)
         var headRot: CGFloat = 0
         if sitting { bodyY = 36 + lift; bodyRot = 0.38; head = CGPoint(x: 40 + off, y: 82 + lift) }
-        if mood == .sad { head = CGPoint(x: 42 + off, y: 74 + lift); headRot = -0.14 }
+        if mood == .sad || mood == .cry { head = CGPoint(x: 42 + off, y: 74 + lift); headRot = -0.14 }
+        if mood == .cry { headRot += sin(mt * 22) * 0.04 }   // sobbing
+        if mood == .jump { headRot = -0.12 }
+        if mood == .eat {
+            // Nose down in the bowl, chomping.
+            let chomp = sin(mt * 14)
+            bodyY -= 3; bodyRot = -0.12
+            head = CGPoint(x: 66 + off + chomp * 2.5, y: max(26, 30 + lift) + chomp * 2); headRot = -0.5
+        }
+        if mood == .poop {
+            // Squatting: rear end down, straining.
+            bodyY -= 10; bodyRot = 0.22
+            head = CGPoint(x: 46 + off, y: 62 + lift); headRot = sin(mt * 30) * 0.04
+        }
+        if mood == .pee { head = CGPoint(x: 46 + off, y: 68 + lift); headRot = 0.1 }
         if mood == .sniff {
             head = CGPoint(x: 52 + off + sin(t * 9) * 2, y: 46 + lift + sin(t * 14) * 1.5)
             headRot = -0.25
@@ -53,9 +67,9 @@ extension Dog {
         if mood == .happy { headRot = sin(mt * 9) * 0.1 }
 
         // Tail
-        let wagSpeed: CGFloat = excited ? 24 : (mood == .walk ? 10 : ((sitting && mood == .sit) ? 7 : (asleep || mood == .sad ? 0 : 5)))
+        let wagSpeed: CGFloat = excited ? 24 : (mood == .walk ? 10 : ((sitting && mood == .sit) ? 7 : (asleep || mood == .sad || mood == .cry ? 0 : 5)))
         let wag = sin(t * wagSpeed) * (wagSpeed > 0 ? 5 : 0)
-        let tailBaseY = (asleep ? 30.0 : (sitting ? 22.0 : 64.0)) + lift
+        let tailBaseY = (asleep ? 30.0 : (sitting ? 22.0 : 64.0)) + lift + (mood == .poop ? 8 : 0)
         // Where the tail meets the back: on the body outline, turned with the body's pose.
         let rear = CGPoint(x: -bodyW * 0.4, y: bodyH * 0.3)
         let root = CGPoint(x: rear.x * cos(bodyRot) - rear.y * sin(bodyRot),
@@ -71,7 +85,8 @@ extension Dog {
         func leg(_ lx: CGFloat, _ p: CGFloat, _ color: NSColor) {
             let m: CGFloat = moving ? 1 : 0
             let px = lx + sin(p) * 9 * m
-            let py = legH / 2 + 0.5 + max(0, cos(p)) * 6 * m
+            let tuck: CGFloat = mood == .jump ? 8 : 0   // legs pulled up mid-leap
+            let py = legH / 2 + 0.5 + max(0, cos(p)) * 6 * m + tuck
             blob(c, px, py, legW, legH, color)
         }
         if asleep {
@@ -110,13 +125,34 @@ extension Dog {
             blob(c, 54 + off, 9, 22, 14, coat.fur)
         } else if sitting {
             blob(c, 36 + off, (legH + 1) / 2, legW, legH + 1, nearLeg)
+        } else if mood == .pee {
+            // Hind leg cocked out behind, stream arcing to the ground.
+            blob(c, -legX - 12, legH / 2 + 10, legW, legH, nearLeg, rot: -1.1)
+            leg(legX, gait + .pi, nearLeg)
+            if mt > 0.3 { drawStream(c, from: CGPoint(x: -legX - 24, y: legH / 2 + 16), toX: -(rearReach + 6)) }
         } else {
             leg(-legX, gait, nearLeg)
             leg(legX, gait + .pi, nearLeg)
         }
 
         drawHead(c, at: head, rot: headRot)
+        if mood == .eat { drawBowl(c, at: 84 + off) }   // in front, so the muzzle dips into it
         c.restoreGState()
+    }
+
+    // MARK: Action props
+
+    private func drawBowl(_ c: CGContext, at bx: CGFloat) {
+        blob(c, bx, 7, 44, 15, Ink.bowl)
+        blob(c, bx, 12, 34, 9, Ink.kibble)
+    }
+
+    /// A thin yellow stream falling from the cocked leg to the ground.
+    private func drawStream(_ c: CGContext, from start: CGPoint, toX endX: CGFloat) {
+        stroke(c, 3.2, color: Ink.pee) {
+            $0.move(to: start)
+            $0.addQuadCurve(to: CGPoint(x: endX, y: 3), control: CGPoint(x: (start.x + endX) / 2 - 6, y: start.y + 6))
+        }
     }
 
     // MARK: Body
@@ -204,6 +240,13 @@ extension Dog {
 
     // MARK: Particles
 
+    /// A puddle spreads out quickly, then slowly fades.
+    private func drawPuddle(_ p: Particle, remaining k: CGFloat) {
+        let width = 46 * scale * min(1, (1 - k) * 12)
+        Ink.pee.withAlphaComponent(min(0.85, k * 4)).setFill()
+        NSBezierPath(ovalIn: NSRect(x: p.x - width / 2, y: p.y - width * 0.1, width: width, height: width * 0.28)).fill()
+    }
+
     func drawParticles() {
         for p in parts {
             let k = p.life / p.maxLife
@@ -214,6 +257,9 @@ extension Dog {
             case .zzz: text = "z"; size = 12 + (1 - k) * 14; color = NSColor(white: 0.95, alpha: alpha)
             case .drop: text = "💧"; size = 14; color = .white
             case .spark: text = "✦"; size = 14; color = NSColor(red: 1, green: 0.85, blue: 0.3, alpha: alpha)
+            case .crumb: text = "•"; size = 13; color = Ink.kibble.withAlphaComponent(alpha)
+            case .poop: text = "💩"; size = 26 * scale / 1.15; color = .white
+            case .puddle: drawPuddle(p, remaining: k); continue
             }
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: size, weight: .heavy),

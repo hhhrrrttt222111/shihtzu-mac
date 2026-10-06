@@ -11,6 +11,9 @@ enum Ink {
     static let capBrim = NSColor(hex: 0x2F6AA3)
     static let gold = NSColor(hex: 0xFFC93C)
     static let gem = NSColor(hex: 0xE5484D)
+    static let bowl = NSColor(hex: 0x5B8DEF)
+    static let kibble = NSColor(hex: 0xA0672B)
+    static let pee = NSColor(hex: 0xF2D544)
     static let petals = [NSColor(hex: 0xFF7FA8), NSColor(hex: 0xFFD25E)]
 }
 
